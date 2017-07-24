@@ -1,0 +1,100 @@
+#coding: utf-8
+import cv2
+import numpy as np
+from matplotlib import pyplot as plt
+
+'''
+Created on 23.05.2017
+
+@author: Mat07
+'''
+ 
+cap = cv2.VideoCapture('videoplayback.mp4')
+
+while(True):
+    # Capture frame-by-frame
+    ret, image = cap.read()
+
+
+    cv2.imshow('image',image)
+    gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    cv2.imshow('image2',gray_image)
+
+    mask_white = cv2.inRange(gray_image, 190, 255)
+    mask_yw_image = cv2.bitwise_and(gray_image, mask_white)
+    cv2.imshow('image3',mask_yw_image)
+    
+    low_threshold = 50
+    high_threshold = 150
+    canny_edges = cv2.Canny(mask_yw_image,low_threshold,high_threshold)
+    cv2.imshow('image4',canny_edges)
+
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
+
+# When everything done, release the capture
+cap.release()
+cv2.destroyAllWindows()
+ 
+ 
+'''
+def region_of_interest(img, vertices):
+    mask = np.zeros_like(img)
+
+    #defining a 3 channel or 1 channel color to fill the mask with depending on the input image
+    if len(img.shape) > 2:
+        channel_count = img.shape[2]  # i.e. 3 or 4 depending on your image
+        ignore_mask_color = (255,) * channel_count
+    else:
+        ignore_mask_color = 255
+
+    #filling pixels inside the polygon defined by "vertices" with the fill color
+    cv2.fillPoly(mask, vertices, ignore_mask_color)
+
+    #returning the image only where mask pixels are nonzero
+    masked_image = cv2.bitwise_and(img, mask)
+    return masked_image
+
+def draw_lines(img, lines, color=[255, 0, 0], thickness=2):
+    for line in lines:
+        for x1,y1,x2,y2 in line:
+            cv2.line(img, (x1, y1), (x2, y2), color, thickness)
+
+def hough_lines(img, rho, theta, threshold, min_line_len, max_line_gap):
+    lines = cv2.HoughLinesP(img, rho, theta, threshold, np.array([]), minLineLength=min_line_len, maxLineGap=max_line_gap)
+    line_img = np.zeros((img.shape[0], img.shape[1], 3), dtype=np.uint8)
+    draw_lines(line_img, lines)
+    return line_img
+
+def weighted_img(img, initial_img, α=0.8, β=1., λ=0.):
+    return cv2.addWeighted(initial_img, α, img, β, λ)
+
+
+
+    
+
+    
+imshape = image.shape
+lower_left = [imshape[1]/9,imshape[0]]
+lower_right = [imshape[1]-imshape[1]/9,imshape[0]]
+top_left = [imshape[1]/2-imshape[1]/8,imshape[0]/2+imshape[0]/10]
+top_right = [imshape[1]/2+imshape[1]/8,imshape[0]/2+imshape[0]/10]
+vertices = [np.array([lower_left,top_left,top_right,lower_right],dtype=np.int32)]
+roi_image = region_of_interest(canny_edges, vertices)
+cv2.imshow('image5', roi_image)
+    
+rho = 2
+theta = np.pi/180
+threshold = 20
+min_line_len = 50
+max_line_gap = 200
+    
+line_image = hough_lines(roi_image, rho, theta, threshold, min_line_len, max_line_gap)
+cv2.imshow('image6',line_image)
+result = weighted_img(line_image, image, α=0.8, β=1., λ=0.)
+cv2.imshow('image7',result)
+    
+k = cv2.waitKey(0)
+if k == 27:
+    cv2.destroyAllWindows()
+'''
